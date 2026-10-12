@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slice Quest — Python String Slicing</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #0f141b;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(88,166,255,.10), transparent 32rem),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+  }
+
+  .wrap {
+    width: min(1100px, calc(100% - 28px));
+    margin: 0 auto;
+    padding: 24px 0 40px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.4rem); }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--muted); margin: 5px 0 0; }
+
+  .stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .stat {
+    border: 1px solid var(--border);
+    background: rgba(22,27,34,.9);
+    border-radius: 10px;
+    padding: 8px 12px;
+    min-width: 78px;
+    text-align: center;
+  }
+  .stat b { display: block; font-size: 1.1rem; }
+  .stat small { color: var(--muted); }
+
+  .card {
+    border: 1px solid var(--border);
+    background: rgba(22,27,34,.96);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.14);
+  }
+
+  .level {
+    display: inline-block;
+    color: var(--purple);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .mission {
+    font-size: 1.08rem;
+    line-height: 1.55;
+    margin-bottom: 18px;
+  }
+
+  .string-box {
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    border-radius: 10px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+
+  .label {
+    color: var(--muted);
+    font-size: .82rem;
+    margin-bottom: 7px;
+  }
+
+  .source {
+    font: 1.2rem var(--mono);
+    white-space: pre;
+    letter-spacing: .04em;
+  }
+
+  .index-row {
+    display: flex;
+    gap: 0;
+    margin-top: 9px;
+    color: var(--muted);
+    font: .78rem var(--mono);
+    white-space: pre;
+  }
+
+  .index-cell {
+    width: 1.2ch;
+    text-align: center;
+    flex: 0 0 1.2ch;
+  }
+
+  .index-cell.negative { color: var(--purple); }
+
+  .task-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: end;
+  }
+
+  .expression {
+    font: 1.15rem var(--mono);
+    color: var(--accent);
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px;
+  }
+
+  input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: #0d1117;
+    color: var(--text);
+    border-radius: 9px;
+    padding: 13px 14px;
+    font: 1rem var(--mono);
+    outline: none;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(88,166,255,.12);
+  }
+
+  button {
+    border: 1px solid var(--border);
+    background: #21262d;
+    color: var(--text);
+    border-radius: 9px;
+    padding: 12px 16px;
+    font: 600 .95rem var(--sans);
+    cursor: pointer;
+  }
+
+  button:hover { border-color: #8b949e; background: #30363d; }
+  button.primary { background: #1f6feb; border-color: #1f6feb; }
+  button.primary:hover { background: #388bfd; }
+  button.success { border-color: var(--green); }
+  button.danger { border-color: var(--red); }
+
+  .feedback {
+    margin-top: 15px;
+    border-radius: 10px;
+    padding: 13px 15px;
+    display: none;
+    line-height: 1.5;
+  }
+  .feedback.good {
+    display: block;
+    background: rgba(63,185,80,.10);
+    border: 1px solid rgba(63,185,80,.45);
+  }
+  .feedback.bad {
+    display: block;
+    background: rgba(248,81,73,.10);
+    border: 1px solid rgba(248,81,73,.45);
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 13px;
+  }
+
+  .hint {
+    color: var(--yellow);
+    border-left: 3px solid var(--yellow);
+    padding-left: 12px;
+    margin-top: 14px;
+    display: none;
+  }
+
+  .explain {
+    color: var(--muted);
+    margin-top: 13px;
+    display: none;
+  }
+
+  code {
+    font-family: var(--mono);
+    color: var(--accent);
+  }
+
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .rule {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px;
+  }
+
+  .rule b { display: block; margin-bottom: 5px; }
+  .rule p { color: var(--muted); margin: 0; line-height: 1.4; font-size: .9rem; }
+
+  @media (max-width: 720px) {
+    header { align-items: flex-start; flex-direction: column; }
+    .stats { justify-content: flex-start; }
+    .task-grid { grid-template-columns: 1fr; }
+    .rules { grid-template-columns: 1fr; }
+    .card { padding: 17px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🧩 Slice <span>Quest</span></h1>
+      <p class="subtitle">Practice Python string slicing without running out of puzzles.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="score">0</b><small>XP</small></div>
+      <div class="stat"><b id="streak">0</b><small>streak</small></div>
+      <div class="stat"><b id="solved">0</b><small>solved</small></div>
+      <div class="stat"><b id="levelStat">1</b><small>level</small></div>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="level" id="levelName">Level 1 · Start</div>
+    <div class="mission" id="mission"></div>
+
+    <div class="string-box">
+      <div class="label">String</div>
+      <div class="source" id="source"></div>
+      <div class="index-row" id="indices"></div>
+    </div>
+
+    <div class="task-grid" style="margin-top:15px">
+      <div>
+        <div class="label">Python expression</div>
+        <div class="expression" id="expression"></div>
+      </div>
+      <div>
+        <div class="label">Your answer</div>
+        <input id="answer" autocomplete="off" spellcheck="false" placeholder="type the resulting string">
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="check">Check answer</button>
+      <button id="hintBtn">💡 Hint</button>
+      <button id="skipBtn">Skip</button>
+      <button id="newBtn" style="display:none">Next puzzle →</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <div class="hint" id="hint"></div>
+    <div class="explain" id="explain"></div>
+  </section>
+
+  <section class="card">
+    <div class="label">Slicing cheat sheet</div>
+    <div class="rules">
+      <div class="rule">
+        <b><code>s[start:end]</code></b>
+        <p>Starts at <code>start</code>, stops before <code>end</code>.</p>
+      </div>
+      <div class="rule">
+        <b><code>s[start:end:step]</code></b>
+        <p>Moves through the string by <code>step</code>.</p>
+      </div>
+      <div class="rule">
+        <b>Negative indexes</b>
+        <p><code>-1</code> is the last character, <code>-2</code> is the second-to-last, and so on.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+
+/*
+  Slice Quest generates puzzles from random strings and random valid
+  Python-style slice parameters. The generator is intentionally broad,
+  so there is no fixed list of questions to exhaust.
+*/
+
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*+-_";
+const words = [
+  "TREASURE",
+  "DRAGON",
+  "ROCKET",
+  "WIZARD",
+  "PIRATE",
+  "GALAXY",
+  "BANANA",
+  "SPACESHIP",
+  "COOKIE",
+  "LASER",
+  "UNICORN",
+  "LAKER",
+  "CASTLE",
+  "GOBLIN",
+  "THUNDER",
+  "JELLY",
+  "COMPUTER",
+  "ADVENTURE",
+  "MYSTERY",
+  "NINJA",
+  "ROBOT",
+  "ALIEN",
+  "ASTRONAUT",
+  "DINOSAUR",
+  "VOLCANO",
+  "RAINBOW",
+  "LIGHTNING",
+  "MONSTER",
+  "WIZARD",
+  "KNIGHT",
+  "PRINCESS",
+  "KINGDOM",
+  "DRAGONFLY",
+  "BUTTERFLY",
+  "FIREFLY",
+  "PENGUIN",
+  "OCTOPUS",
+  "SHARK",
+  "WHALE",
+  "DOLPHIN",
+  "TURTLE",
+  "HAMSTER",
+  "PANDA",
+  "TIGER",
+  "ELEPHANT",
+  "GIRAFFE",
+  "ZEBRA",
+  "MONKEY",
+  "GORILLA",
+  "CHEETAH",
+  "VOLCANO",
+  "ISLAND",
+  "JUNGLE",
+  "DESERT",
+  "MOUNTAIN",
+  "OCEAN",
+  "FOREST",
+  "CAVERN",
+  "CASTLE",
+  "FORTRESS",
+  "DUNGEON",
+  "LABYRINTH",
+  "PORTAL",
+  "MAGIC",
+  "POTION",
+  "SPELLBOOK",
+  "CRYSTAL",
+  "DIAMOND",
+  "EMERALD",
+  "RUBY",
+  "SAPPHIRE",
+  "GOLD",
+  "SILVER",
+  "SWORD",
+  "SHIELD",
+  "HAMMER",
+  "ARROW",
+  "CANNON",
+  "PIRATE",
+  "SAILOR",
+  "CAPTAIN",
+  "ISLAND",
+  "COMPASS",
+  "MAP",
+  "ANCHOR",
+  "SHIPWRECK",
+  "SUBMARINE",
+  "SPACESHIP",
+  "SATELLITE",
+  "PLANET",
+  "STARLIGHT",
+  "MOONLIGHT",
+  "COMET",
+  "METEOR",
+  "GALAXY",
+  "UNIVERSE",
+  "TIME",
+  "THUNDER",
+  "FIREBALL",
+  "ICEBERG"
+];
+const els = {
+  source: document.getElementById("source"),
+  indices: document.getElementById("indices"),
+  expression: document.getElementById("expression"),
+  mission: document.getElementById("mission"),
+  levelName: document.getElementById("levelName"),
+  answer: document.getElementById("answer"),
+  feedback: document.getElementById("feedback"),
+  hint: document.getElementById("hint"),
+  explain: document.getElementById("explain"),
+  score: document.getElementById("score"),
+  streak: document.getElementById("streak"),
+  solved: document.getElementById("solved"),
+  levelStat: document.getElementById("levelStat"),
+  check: document.getElementById("check"),
+  hintBtn: document.getElementById("hintBtn"),
+  skipBtn: document.getElementById("skipBtn"),
+  newBtn: document.getElementById("newBtn")
+};
+
+let puzzle = null;
+let score = 0;
+let streak = 0;
+let solved = 0;
+let level = 1;
+let hintsUsed = 0;
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function choice(arr) {
+  return arr[randInt(0, arr.length - 1)];
+}
+
+function randomString(length) {
+  let out = "";
+  for (let i = 0; i < length; i++) out += choice(alphabet);
+  return out;
+}
+
+function randomWordString(length) {
+  const word = choice(words);
+  const filler = randomString(Math.max(0, length - word.length));
+  return Math.random() < .5 ? word + filler : filler + word;
+}
+
+function pythonIndexLabel(i, length) {
+  return i - length;
+}
+
+function jsSliceEquivalent(str, start, end, step) {
+  // Python-style slicing, including negative values and negative steps.
+  const n = str.length;
+
+  function normalizeIndex(x, defaultValue) {
+    if (x === null) return defaultValue;
+    let v = x;
+    if (v < 0) v += n;
+    return Math.max(0, Math.min(n, v));
+  }
+
+  let s, e;
+
+  if (step > 0) {
+    s = start === null ? 0 : normalizeIndex(start, 0);
+    e = end === null ? n : normalizeIndex(end, n);
+  } else {
+    s = start === null ? n - 1 : normalizeIndex(start, n - 1);
+    e = end === null ? -1 : end < 0 ? Math.max(-1, end + n) : Math.min(n, end);
+    if (end === null) e = -1;
+  }
+
+  let result = "";
+  if (step > 0) {
+    for (let i = s; i < e; i += step) result += str[i];
+  } else {
+    for (let i = s; i > e; i += step) {
+      if (i >= 0 && i < n) result += str[i];
+    }
+  }
+  return result;
+}
+
+function pythonSlice(str, start, end, step) {
+  // A faithful enough implementation for the generated puzzle range.
+  const n = str.length;
+  let s, e;
+
+  if (step > 0) {
+    s = start === null ? 0 : (start < 0 ? Math.max(0, start + n) : Math.min(n, start));
+    e = end === null ? n : (end < 0 ? Math.max(0, end + n) : Math.min(n, end));
+  } else {
+    s = start === null ? n - 1 : (start < 0 ? start + n : Math.min(n - 1, start));
+    e = end === null ? -1 : (end < 0 ? end + n : Math.min(n - 1, end));
+  }
+
+  let result = "";
+  if (step > 0) {
+    for (let i = s; i < e; i += step) result += str[i];
+  } else {
+    for (let i = s; i > e; i += step) {
+      if (i >= 0 && i < n) result += str[i];
+    }
+  }
+  return result;
+}
+
+function makeExpression(start, end, step) {
+  const a = start === null ? "" : start;
+  const b = end === null ? "" : end;
+  if (step === 1) return `s[${a}:${b}]`;
+  return `s[${a}:${b}:${step}]`;
+}
+
+function choosePuzzle() {
+  /*
+    Difficulty increases with the player's level.
+    1: positive start/end
+    2: missing start/end
+    3: steps
+    4: negative indexes
+    5+: combinations, reverse slices, larger strings
+  */
+  const difficulty = Math.min(7, Math.max(1, Math.ceil(level / 2)));
+  let length = randInt(8, difficulty >= 5 ? 26 : 18);
+
+  let str;
+  if (Math.random() < .42) {
+    str = randomWordString(length);
+  } else {
+    str = randomString(length);
+  }
+
+  let start = null, end = null, step = 1;
+  let type = "";
+
+  if (difficulty === 1) {
+    start = randInt(0, length - 3);
+    end = randInt(start + 1, length);
+    type = "start/end";
+  } else if (difficulty === 2) {
+    const mode = randInt(1, 3);
+    if (mode === 1) {
+      start = null;
+      end = randInt(2, length);
+      type = "start omitted";
+    } else if (mode === 2) {
+      start = randInt(0, length - 2);
+      end = null;
+      type = "end omitted";
+    } else {
+      start = randInt(0, length - 3);
+      end = randInt(start + 1, length);
+      type = "start/end";
+    }
+  } else if (difficulty === 3) {
+    start = randInt(0, length - 2);
+    end = randInt(start + 1, length);
+    step = choice([2, 2, 3, 4]);
+    type = "step";
+  } else if (difficulty === 4) {
+    const mode = randInt(1, 3);
+    if (mode === 1) {
+      start = randInt(-length + 1, -2);
+      end = randInt(-1, length - 1);
+      if (start >= end) {
+        [start, end] = [-length + 1, -1];
+      }
+      type = "negative index";
+    } else if (mode === 2) {
+      start = randInt(-length + 1, -2);
+      end = null;
+      type = "negative start";
+    } else {
+      start = null;
+      end = randInt(-length + 1, -1);
+      type = "negative end";
+    }
+  } else if (difficulty === 5) {
+    const mode = randInt(1, 4);
+    if (mode <= 2) {
+      start = randInt(-length + 1, length - 1);
+      end = randInt(-length + 1, length);
+      step = choice([2, 3, -1]);
+      type = "mixed indexes";
+    } else {
+      start = null;
+      end = null;
+      step = choice([2, 3, 4]);
+      type = "step";
+    }
+  } else {
+    // Advanced: reverse slices and mixed negative/positive bounds.
+    step = choice([-1, -1, -1, -2, -3]);
+    start = Math.random() < .4 ? null : randInt(-length + 1, length - 1);
+    end = Math.random() < .4 ? null : randInt(-length, length - 1);
+    type = "reverse slice";
+  }
+
+  // Avoid empty answers too often.
+  let answer = pythonSlice(str, start, end, step);
+  if (answer.length === 0 && Math.random() < .85) {
+    return choosePuzzle();
+  }
+
+  const expression = makeExpression(start, end, step);
+
+  let levelName;
+  if (difficulty === 1) levelName = "Level 1 · Basic slices";
+  else if (difficulty === 2) levelName = "Level 2 · Open-ended slices";
+  else if (difficulty === 3) levelName = "Level 3 · Steps";
+  else if (difficulty === 4) levelName = "Level 4 · Negative indexes";
+  else if (difficulty === 5) levelName = "Level 5 · Mixed slices";
+  else levelName = "Level 6+ · Slice wizard";
+
+  return {
+    str, start, end, step, answer, expression, type, difficulty, levelName
+  };
+}
+
+function renderIndices(str) {
+  els.indices.innerHTML = "";
+  for (let i = 0; i < str.length; i++) {
+    const cell = document.createElement("span");
+    cell.className = "index-cell";
+    cell.textContent = i;
+    els.indices.appendChild(cell);
+  }
+}
+
+function renderPuzzle() {
+  puzzle = choosePuzzle();
+  hintsUsed = 0;
+
+  els.levelName.textContent = puzzle.levelName;
+  els.mission.innerHTML =
+    `What does <code>${escapeHtml(puzzle.expression)}</code> produce?`;
+  els.source.textContent = puzzle.str;
+  renderIndices(puzzle.str);
+  els.expression.textContent = `s = "${puzzle.str}"`;
+  els.answer.value = "";
+  els.answer.focus();
+
+  els.feedback.className = "feedback";
+  els.feedback.textContent = "";
+  els.hint.style.display = "none";
+  els.explain.style.display = "none";
+  els.newBtn.style.display = "none";
+  els.check.style.display = "";
+  els.skipBtn.style.display = "";
+  els.hintBtn.style.display = "";
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function describeSlice() {
+  const { start, end, step } = puzzle;
+  const startText = start === null ? "the beginning" : `index ${start}`;
+  const endText = end === null ? "the end" : `just before index ${end}`;
+  const stepText = step === 1 ? "one character at a time" :
+                   `in jumps of ${Math.abs(step)} character${Math.abs(step) === 1 ? "" : "s"}`;
+
+  if (step < 0) {
+    return `Start at ${startText} and move backward toward ${endText}, ${stepText}.`;
+  }
+  return `Start at ${startText}, stop before ${endText}, and move ${stepText}.`;
+}
+
+function checkAnswer() {
+  if (!puzzle) return;
+
+  const user = els.answer.value;
+  const correct = puzzle.answer;
+
+  if (user === correct) {
+    const base = 10 + puzzle.difficulty * 5;
+    const bonus = hintsUsed === 0 ? 5 : 0;
+    const earned = base + bonus;
+
+    score += earned;
+    streak++;
+    solved++;
+    level = 1 + Math.floor(solved / 5);
+
+    els.score.textContent = score;
+    els.streak.textContent = streak;
+    els.solved.textContent = solved;
+    els.levelStat.textContent = level;
+
+    els.feedback.className = "feedback good";
+    els.feedback.innerHTML =
+      `✅ <strong>Correct!</strong> +${earned} XP. ` +
+      (hintsUsed === 0 ? "Perfect — no hint needed!" : "Nice recovery!");
+
+    els.explain.textContent =
+      `${describeSlice()} The result is "${correct}".`;
+    els.explain.style.display = "block";
+
+    els.check.style.display = "none";
+    els.skipBtn.style.display = "none";
+    els.hintBtn.style.display = "none";
+    els.newBtn.style.display = "";
+
+  } else {
+    streak = 0;
+    els.streak.textContent = streak;
+
+    els.feedback.className = "feedback bad";
+    els.feedback.innerHTML =
+      `❌ Not quite. You entered <code>${escapeHtml(user)}</code>. ` +
+      `Check where the slice starts, where it stops, and whether the step skips characters.`;
+  }
+}
+
+function showHint() {
+  hintsUsed++;
+  const { start, end, step, str } = puzzle;
+
+  let hint;
+  if (hintsUsed === 1) {
+    hint = `Remember: the end index is <strong>not included</strong>. ` +
+           `For this puzzle, the slice uses ${start === null ? "the beginning" : `start = ${start}`} ` +
+           `and ${end === null ? "the end" : `end = ${end}`}.`;
+  } else if (hintsUsed === 2) {
+    hint = `The step is <strong>${step}</strong>. ` +
+           (step > 0
+             ? "Move left-to-right and skip characters according to the step."
+             : "Move right-to-left because the step is negative.");
+  } else {
+    hint = `Try writing the indexes above the string on paper. ` +
+           `The string has ${str.length} characters.`;
+  }
+
+  els.hint.innerHTML = hint;
+  els.hint.style.display = "block";
+}
+
+function skipPuzzle() {
+  streak = 0;
+  els.streak.textContent = streak;
+  renderPuzzle();
+}
+
+els.check.addEventListener("click", checkAnswer);
+els.hintBtn.addEventListener("click", showHint);
+els.skipBtn.addEventListener("click", skipPuzzle);
+els.newBtn.addEventListener("click", renderPuzzle);
+
+els.answer.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    if (els.check.style.display !== "none") checkAnswer();
+    else renderPuzzle();
+  }
+});
+
+renderPuzzle();
+</script>
+</body>
+</html>
